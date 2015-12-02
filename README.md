@@ -14,7 +14,11 @@ Please note that we will provide support as necessary for this plugin, but we ca
 * Activate the plugin
 * Go to `WooCommerce > Settings`
 * Choose `Order Simulator` to set your order settings
-* You can define the number of orders created per hour, limit the products that will be added to an order, limit the min/max products per order
+* You can:
+  * Define the number of orders created per hour (turn off by setting to `0`)
+  * Limit the products that can be added to each order (leave blank to allow any product)
+  * Limit the minimum number of products per order
+  * Limit the maximum number of products per order
 * Set your `Create User Accounts` settings
   * We always recommend testing with email turned off, using an SMTP service in test mode, or otherwise.
   * When installing, a table will be installed called `fakenames` from the `fakenames.sql` which includes a random database of names and emails (auto-generated and _fake_ to the best of our knowledge)
