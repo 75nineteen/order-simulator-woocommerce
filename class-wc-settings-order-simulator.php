@@ -51,10 +51,24 @@ if ( ! class_exists( 'WC_Settings_Order_Simulator' ) ) :
 
             $data_selected = esc_attr( json_encode( $json_ids ) );
             $data_value    = implode( ',', array_keys( $json_ids ) );
+            $next_scheduled = wp_next_scheduled( 'wcos_create_orders' );
+
+            if ( !$next_scheduled ) {
+                $message = 'Schedule not found. Please deactivate then activate the plugin to fix the scheduler.';
+            } else {
+                $format = get_option('date_format') .' '. get_option('time_format');
+                $now = date( $format, current_time('timestamp', true) );
+                $message = 'Current time: <code>'. $now .' GMT</code><br/>Next run: <code>'. date( get_option('date_format') .' '. get_option('time_format'), $next_scheduled ) .' GMT</code>';
+            }
 
             $settings = apply_filters( 'woocommerce_order_simulator_settings', array(
 
-                array( 'title' => __( 'Settings', 'woocommerce' ), 'type' => 'title', 'desc' => '', 'id' => 'wcos_settings' ),
+                array(
+                    'title' => __( 'Settings', 'woocommerce' ),
+                    'type' => 'title',
+                    'desc' => $message,
+                    'id' => 'wcos_settings'
+                ),
 
                 array(
                     'title'    => __( 'Orders per Hour', 'woocommerce' ),
@@ -123,6 +137,51 @@ if ( ! class_exists( 'WC_Settings_Order_Simulator' ) ) :
                     'class'     => 'wc-enhanced-select'
                 ),
 
+                array(
+                    'title'     => __( 'Completed Order Status Chance', 'woocommerce' ),
+                    'desc_tip'  => false,
+                    'id'        => 'wcos_order_completed_pct',
+                    'desc'      => __( '%', 'woocommerce' ),
+                    'type'      => 'number',
+                    'default'   => $values['order_completed_pct'],
+                    'autoload'  => false,
+                    'css'       => 'width:50px;',
+                    'custom_attributes' => array(
+                        'min'   => 0,
+                        'max'   => 100
+                    )
+                ),
+
+                array(
+                    'title'     => __( 'Processing Order Status Chance', 'woocommerce' ),
+                    'desc_tip'  => false,
+                    'id'        => 'wcos_order_processing_pct',
+                    'desc'      => __( '%', 'woocommerce' ),
+                    'type'      => 'number',
+                    'default'   => $values['order_processing_pct'],
+                    'autoload'  => false,
+                    'css'       => 'width:50px;',
+                    'custom_attributes' => array(
+                        'min'   => 0,
+                        'max'   => 100
+                    )
+                ),
+
+                array(
+                    'title'     => __( 'Failed Order Status Chance', 'woocommerce' ),
+                    'desc_tip'  => false,
+                    'id'        => 'wcos_order_failed_pct',
+                    'desc'      => __( '%', 'woocommerce' ),
+                    'type'      => 'number',
+                    'default'   => $values['order_failed_pct'],
+                    'autoload'  => false,
+                    'css'       => 'width:50px;',
+                    'custom_attributes' => array(
+                        'min'   => 0,
+                        'max'   => 100
+                    )
+                ),
+
                 array( 'type' => 'sectionend', 'id' => 'wcos_settings'),
 
             ) );
@@ -153,7 +212,10 @@ if ( ! class_exists( 'WC_Settings_Order_Simulator' ) ) :
                 'products'              => array_map( 'trim', explode( ',', $_POST['wcos_products'] ) ),
                 'min_order_products'    => absint( $_POST['wcos_min_order_products'] ),
                 'max_order_products'    => absint( $_POST['wcos_max_order_products'] ),
-                'create_users'          => (bool) $_POST['wcos_create_users']
+                'create_users'          => (bool) $_POST['wcos_create_users'],
+                'order_completed_pct'   => absint( $_POST['wcos_order_completed_pct'] ),
+                'order_processing_pct'  => absint( $_POST['wcos_order_processing_pct'] ),
+                'order_failed_pct'      => absint( $_POST['wcos_order_failed_pct'] ),
             );
 
             if ( !empty( $settings['products'] ) ) {
@@ -166,6 +228,19 @@ if ( ! class_exists( 'WC_Settings_Order_Simulator' ) ) :
 
             if ( empty( $settings['max_order_products'] ) || $settings['max_order_products'] < $settings['min_order_products'] ) {
                 $settings['max_order_products'] = $settings['min_order_products'];
+            }
+
+            $sum = $settings['order_completed_pct'] + $settings['order_processing_pct'] + $settings['order_failed_pct'];
+
+            while ( $sum > 100 ) {
+                if ( $settings['order_failed_pct'] > 0 ) {
+                    $settings['order_failed_pct']--;
+                } elseif ( $settings['order_processing_pct'] > 0 ) {
+                    $settings['order_processing_pct']--;
+                } else {
+                    $settings['order_completed_pct']--;
+                }
+                $sum = $settings['order_completed_pct'] + $settings['order_processing_pct'] + $settings['order_failed_pct'];
             }
 
             $stored_settings = WC_Order_Simulator::get_settings();

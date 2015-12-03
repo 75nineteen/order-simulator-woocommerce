@@ -3,7 +3,7 @@
   * Plugin Name: Order Simulator for WooCommerce
   * Plugin URI: http://www.75nineteen.com
   * Description: Automate orders to generate WooCommerce storefronts at scale for testing purposes.
-  * Version: 1.0.0
+  * Version: 1.0.1
   * Author: 75nineteen Media LLC
   * Author URI: http://www.75nineteen.com
 
@@ -111,7 +111,8 @@ PRIMARY KEY  (number)
     }
 
     public function create_orders_on_init() {
-        add_action( 'wp_loaded', array($this, 'create_orders') );
+        //add_action( 'init', array($this, 'create_orders') );
+        $this->create_orders();
     }
 
     public static function get_settings() {
@@ -123,7 +124,10 @@ PRIMARY KEY  (number)
             'max_order_products'    => 5,
             'create_users'          => true,
             'payment_method'        => 'auto',
-            'shipping_method'       => 'auto'
+            'shipping_method'       => 'auto',
+            'order_completed_pct'   => 90,
+            'order_processing_pct'  => 5,
+            'order_failed_pct'      => 5
         );
         $settings = wp_parse_args( $settings, $defaults );
 
@@ -171,7 +175,7 @@ PRIMARY KEY  (number)
             }
         }
 
-        for ( $x = 0; $x <= $this->settings['orders_per_hour']; $x++ ) {
+        for ( $x = 0; $x < $this->settings['orders_per_hour']; $x++ ) {
             $cart           = array();
             $num_products   = rand( $this->settings['min_order_products'], $this->settings['max_order_products'] );
             $create_user    = false;
@@ -241,7 +245,28 @@ PRIMARY KEY  (number)
                 do_action( 'woocommerce_checkout_order_processed', $order_id, $data );
 
                 $order = new WC_Order($order_id);
-                $order->payment_complete();
+
+                // figure out the order status
+                $status = 'completed';
+                $rand = mt_rand(1, 100);
+                $completed_pct  = $this->settings['order_completed_pct']; // e.g. 90
+                $processing_pct = $completed_pct + $this->settings['order_processing_pct']; // e.g. 90 + 5
+                $failed_pct     = $processing_pct + $this->settings['order_failed_pct']; // e.g. 95 + 5
+
+                if ( $this->settings['order_completed_pct'] > 0 && $rand <= $completed_pct ) {
+                    $status = 'completed';
+                } elseif ( $this->settings['order_processing_pct'] > 0 && $rand <= $processing_pct ) {
+                    $status = 'processing';
+                } elseif ( $this->settings['order_failed_pct'] > 0 && $rand <= $failed_pct ) {
+                    $status = 'failed';
+                }
+
+                if ( $status == 'failed' ) {
+                    $order->update_status( $status );
+                } else {
+                    $order->payment_complete();
+                    $order->update_status( $status );
+                }
             }
 
             // clear cart
