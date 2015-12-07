@@ -19,9 +19,10 @@ Please note that we will provide support as necessary for this plugin, but we ca
   * Limit the products that can be added to each order (leave blank to allow any product)
   * Limit the minimum number of products per order
   * Limit the maximum number of products per order
-  * Set the percentage of orders that go to `Completed`, `Processing`, or `Failed` status
+  * Set the percentage of orders that go to `Completed`, `Pending Payment`, or `Failed` status
 * Set your `Create User Accounts` settings
   * We always recommend testing with email turned off, using an SMTP service in test mode, or otherwise.
   * When installing, a table will be installed called `fakenames` from the `fakenames.sql` which includes a random database of names and emails (auto-generated and _fake_ to the best of our knowledge)
   * If you have `Create User Accounts` to `No` then the orders will be assigned to existing users
-  * If you have `Create User Accounts` to `Yes` then the orders will be assigned to new users created using the `fakenames.sql` data
+  * If you have `Create User Accounts` to `Yes` then the orders will be assigned to new users created using the `fakenames.sql` data, and from existing users
+* Please make sure that you have `BACS` payments turned on
