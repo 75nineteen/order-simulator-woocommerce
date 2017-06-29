@@ -227,7 +227,7 @@ PRIMARY KEY  (number)
 
             $woocommerce->cart->calculate_totals();
 
-            $order_id = $checkout->create_order();
+            $order_id = $checkout->create_order( $data );
 
             if ( $order_id ) {
                 update_post_meta( $order_id, '_payment_method', 'bacs' );
