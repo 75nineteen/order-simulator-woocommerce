@@ -1,0 +1,12 @@
+{
+    "name": "75nineteen/order-simulator-woocommerce",
+    "description": "An automated generator of fake orders for WooCommerce for testing or other purposes",
+    "type": "wordpress-plugin",
+    "authors": [
+        {
+            "name": "75nineteen",
+            "email": "scott@75nineteen.com"
+        }
+    ],
+    "require": {}
+}
