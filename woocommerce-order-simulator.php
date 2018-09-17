@@ -3,7 +3,7 @@
   * Plugin Name: Order Simulator for WooCommerce
   * Plugin URI: http://www.75nineteen.com
   * Description: Automate orders to generate WooCommerce storefronts at scale for testing purposes.
-  * Version: 1.0.1
+  * Version: 1.0.2
   * Author: 75nineteen Media LLC
   * Author URI: http://www.75nineteen.com
 
@@ -330,7 +330,10 @@ PRIMARY KEY  (number)
 
     public function get_random_user() {
         if ( !$this->users ) {
-            $this->users  = get_users( array('role' => 'Subscriber', 'fields' => 'ID') );
+            // This was not querying newly created users, always causing a guest checkout if you wanted orders assigned to existing users
+            //$this->users  = get_users( array('role' => 'Subscriber', 'fields' => 'ID') );
+        
+            $this->users  = get_users( array('role' => 'Customer', 'fields' => 'ID') );
         }
 
         $length = count($this->users);
