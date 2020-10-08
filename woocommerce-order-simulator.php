@@ -280,7 +280,7 @@ PRIMARY KEY  (number)
         $user_id = 0;
 
         do {
-            $user_row = $wpdb->get_row("SELECT * FROM fakenames ORDER BY RAND() LIMIT 1");
+            $user_row = $wpdb->get_row("SELECT *  FROM fakenames JOIN (SELECT CEIL(RAND() * (SELECT MAX(number) FROM fakenames)) AS number ) AS r2 USING (number);");
 
             $count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}users WHERE user_login = '{$user_row->username}'");
 
